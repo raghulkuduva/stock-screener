@@ -60,7 +60,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  LineChart,
 } from "lucide-react";
 import { StockChart } from "@/components/stock-chart";
 
@@ -193,7 +192,6 @@ function MetricCard({
 
 function StockCard({ stock, rank }: { stock: Stock; rank: number }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [showChart, setShowChart] = useState(false);
   const high52w = get52wHigh(stock);
   const pctFromHigh = high52w && stock.current_price 
     ? ((stock.current_price / high52w) - 1) * 100 
@@ -207,7 +205,7 @@ function StockCard({ stock, rank }: { stock: Stock; rank: number }) {
             <div className="flex items-center justify-between">
               {/* Left: Rank & Ticker */}
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-black font-bold mono text-sm">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-400 text-zinc-900 font-bold mono text-sm">
                   #{rank}
                 </div>
                 <div>
@@ -283,25 +281,10 @@ function StockCard({ stock, rank }: { stock: Stock; rank: number }) {
           <div className="px-6 pb-6">
             <Separator className="mb-4" />
             
-            {/* Chart Toggle Button */}
-            <div className="mb-4">
-              <Button
-                variant={showChart ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowChart(!showChart)}
-                className="gap-2"
-              >
-                <LineChart className="h-4 w-4" />
-                {showChart ? "Hide Chart" : "Show Price Chart"}
-              </Button>
+            {/* Price Chart - Always visible when expanded */}
+            <div className="mb-6">
+              <StockChart ticker={stock.ticker} />
             </div>
-
-            {/* Price Chart */}
-            {showChart && (
-              <div className="mb-6">
-                <StockChart ticker={stock.ticker} />
-              </div>
-            )}
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -459,8 +442,8 @@ export default function Home() {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600">
-                  <Activity className="h-6 w-6 text-black" />
+                <div className="p-2 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-400">
+                  <Activity className="h-6 w-6 text-zinc-900" />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold gradient-text">Momentum Screener</h1>
@@ -564,7 +547,7 @@ export default function Home() {
                   <Button
                     onClick={runScreener}
                     disabled={isLoading}
-                    className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black"
+                    className="w-full h-12 text-lg font-semibold bg-zinc-100 hover:bg-zinc-200 text-zinc-900"
                   >
                     {isLoading ? (
                       <>
@@ -859,7 +842,7 @@ export default function Home() {
           {/* Initial State */}
           {!results && !isLoading && !error && (
             <div className="text-center py-16 animate-slide-in-delay-2">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-zinc-500/20 to-zinc-400/20 mb-6">
                 <Target className="h-10 w-10 text-primary" />
               </div>
               <h3 className="text-2xl font-semibold mb-3">Ready to Screen</h3>

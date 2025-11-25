@@ -6,35 +6,36 @@
 
 @layer base {
   :root {
+    /* Zinc Dark Theme */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 36 100% 50%;
-    --primary-foreground: 240 10% 3.9%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 36 100% 50%;
-    --accent-foreground: 240 10% 3.9%;
-    --destructive: 0 84% 60%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 36 100% 50%;
-    --chart-1: 36 100% 50%;
-    --chart-2: 142 76% 36%;
-    --chart-3: 0 84% 60%;
+    --ring: 240 4.9% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
-    --chart-5: 200 80% 50%;
+    --chart-5: 340 75% 55%;
     --radius: 0.75rem;
 
     /* Custom variables */
     --success: 142 76% 36%;
-    --warning: 36 100% 50%;
+    --warning: 38 92% 50%;
     --danger: 0 84% 60%;
   }
 }
@@ -72,7 +73,7 @@
 
 @layer components {
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-zinc-200 to-zinc-400;
   }
 
   .gradient-border {
@@ -85,7 +86,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(36 100% 70%));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(240 5% 64.9%));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
@@ -94,11 +95,11 @@
   }
 
   .glass-card {
-    @apply bg-card/50 backdrop-blur-xl border border-border/50;
+    @apply bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50;
   }
 
-  .glow-amber {
-    box-shadow: 0 0 40px -10px hsl(var(--primary) / 0.3);
+  .glow {
+    box-shadow: 0 0 40px -10px hsl(var(--primary) / 0.2);
   }
 
   .mono {
@@ -111,10 +112,10 @@
 
   @keyframes glow {
     0%, 100% {
-      box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.4);
+      box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.3);
     }
     50% {
-      box-shadow: 0 0 30px -5px hsl(var(--primary) / 0.6);
+      box-shadow: 0 0 30px -5px hsl(var(--primary) / 0.5);
     }
   }
 
@@ -128,8 +129,8 @@
   }
 
   .stock-card:hover {
-    @apply -translate-y-1;
-    box-shadow: 0 10px 40px -10px hsl(var(--primary) / 0.2);
+    @apply -translate-y-1 border-zinc-700;
+    box-shadow: 0 10px 40px -10px rgba(255, 255, 255, 0.1);
   }
 
   /* Return colors */
@@ -163,10 +164,10 @@
     pointer-events: none;
   }
 
-  /* Radial gradient background */
+  /* Radial gradient background - zinc themed */
   .radial-gradient-bg {
-    background: radial-gradient(ellipse at top, hsl(var(--primary) / 0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at bottom right, hsl(280 65% 60% / 0.05) 0%, transparent 50%),
+    background: radial-gradient(ellipse at top, rgba(161, 161, 170, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(113, 113, 122, 0.05) 0%, transparent 50%),
                 hsl(var(--background));
   }
 }
