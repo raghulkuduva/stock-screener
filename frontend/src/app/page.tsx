@@ -60,7 +60,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  LineChart,
 } from "lucide-react";
+import { StockChart } from "@/components/stock-chart";
 
 // =============================================================================
 // Types
@@ -191,6 +193,7 @@ function MetricCard({
 
 function StockCard({ stock, rank }: { stock: Stock; rank: number }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showChart, setShowChart] = useState(false);
   const high52w = get52wHigh(stock);
   const pctFromHigh = high52w && stock.current_price 
     ? ((stock.current_price / high52w) - 1) * 100 
@@ -279,6 +282,28 @@ function StockCard({ stock, rank }: { stock: Stock; rank: number }) {
         <CollapsibleContent>
           <div className="px-6 pb-6">
             <Separator className="mb-4" />
+            
+            {/* Chart Toggle Button */}
+            <div className="mb-4">
+              <Button
+                variant={showChart ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowChart(!showChart)}
+                className="gap-2"
+              >
+                <LineChart className="h-4 w-4" />
+                {showChart ? "Hide Chart" : "Show Price Chart"}
+              </Button>
+            </div>
+
+            {/* Price Chart */}
+            {showChart && (
+              <div className="mb-6">
+                <StockChart ticker={stock.ticker} />
+              </div>
+            )}
+
+            {/* Metrics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">EMA 100</p>

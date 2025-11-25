@@ -8,10 +8,12 @@ Run with: uvicorn api:app --reload --port 8000
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import yfinance as yf
+import pandas as pd
 
 from screener import (
     get_ticker_list,
@@ -93,6 +95,35 @@ class IndexInfo(BaseModel):
     name: str
     description: str
     stock_count: int
+
+
+class ChartDataPoint(BaseModel):
+    date: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int
+
+
+class ChartResponse(BaseModel):
+    success: bool
+    ticker: str
+    period: str
+    data: List[ChartDataPoint]
+    current_price: Optional[float]
+    price_change: Optional[float]
+    price_change_pct: Optional[float]
+
+
+# Period mapping for yfinance
+PERIOD_MAP = {
+    "1M": "1mo",
+    "3M": "3mo",
+    "6M": "6mo",
+    "1Y": "1y",
+    "2Y": "2y",
+}
 
 
 # =============================================================================
@@ -179,6 +210,54 @@ def clean_dataframe_for_json(df) -> List[Dict[str, Any]]:
         cleaned.append(clean_record)
     
     return cleaned
+
+
+def fetch_chart_data_sync(ticker: str, period: str) -> dict:
+    """Fetch chart data for a ticker synchronously."""
+    yf_period = PERIOD_MAP.get(period, "6mo")
+    
+    # Ensure ticker has .NS suffix
+    if not ticker.endswith(".NS"):
+        ticker = f"{ticker}.NS"
+    
+    # Fetch data
+    stock = yf.Ticker(ticker)
+    df = stock.history(period=yf_period, interval="1d")
+    
+    if df.empty:
+        raise ValueError(f"No data found for ticker {ticker}")
+    
+    # Prepare chart data
+    chart_data = []
+    for idx, row in df.iterrows():
+        chart_data.append({
+            "date": idx.strftime("%Y-%m-%d"),
+            "open": round(row["Open"], 2),
+            "high": round(row["High"], 2),
+            "low": round(row["Low"], 2),
+            "close": round(row["Close"], 2),
+            "volume": int(row["Volume"]),
+        })
+    
+    # Calculate price change
+    if len(df) >= 2:
+        current_price = df["Close"].iloc[-1]
+        start_price = df["Close"].iloc[0]
+        price_change = current_price - start_price
+        price_change_pct = (price_change / start_price) * 100
+    else:
+        current_price = df["Close"].iloc[-1] if len(df) > 0 else None
+        price_change = None
+        price_change_pct = None
+    
+    return {
+        "ticker": ticker,
+        "period": period,
+        "data": chart_data,
+        "current_price": round(current_price, 2) if current_price else None,
+        "price_change": round(price_change, 2) if price_change else None,
+        "price_change_pct": round(price_change_pct, 2) if price_change_pct else None,
+    }
 
 
 # =============================================================================
@@ -297,6 +376,101 @@ async def get_tickers(index_name: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/chart/{ticker}")
+async def get_chart_data(
+    ticker: str,
+    period: str = "6M",
+):
+    """
+    Get historical price chart data for a stock.
+    
+    Parameters:
+    - ticker: Stock ticker symbol (e.g., RELIANCE, TCS, INFY)
+    - period: Time period - 1M, 3M, 6M, 1Y, 2Y (default: 6M)
+    
+    Returns chart data with OHLCV values and price change statistics.
+    """
+    # Validate period
+    if period not in PERIOD_MAP:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid period: {period}. Valid options: {list(PERIOD_MAP.keys())}"
+        )
+    
+    try:
+        # Run in thread pool to not block
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            executor,
+            fetch_chart_data_sync,
+            ticker,
+            period,
+        )
+        
+        return ChartResponse(
+            success=True,
+            **result
+        )
+    
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching chart data: {str(e)}")
+
+
+@app.get("/chart/batch")
+async def get_batch_chart_data(
+    tickers: str,
+    period: str = "6M",
+):
+    """
+    Get chart data for multiple stocks at once.
+    
+    Parameters:
+    - tickers: Comma-separated list of ticker symbols
+    - period: Time period - 1M, 3M, 6M, 1Y, 2Y (default: 6M)
+    
+    Returns dict of ticker -> chart data.
+    """
+    if period not in PERIOD_MAP:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid period: {period}. Valid options: {list(PERIOD_MAP.keys())}"
+        )
+    
+    ticker_list = [t.strip() for t in tickers.split(",") if t.strip()]
+    
+    if not ticker_list:
+        raise HTTPException(status_code=400, detail="No tickers provided")
+    
+    if len(ticker_list) > 20:
+        raise HTTPException(status_code=400, detail="Maximum 20 tickers per request")
+    
+    results = {}
+    errors = {}
+    
+    loop = asyncio.get_event_loop()
+    
+    for ticker in ticker_list:
+        try:
+            result = await loop.run_in_executor(
+                executor,
+                fetch_chart_data_sync,
+                ticker,
+                period,
+            )
+            results[ticker] = result
+        except Exception as e:
+            errors[ticker] = str(e)
+    
+    return {
+        "success": True,
+        "period": period,
+        "data": results,
+        "errors": errors if errors else None,
+    }
 
 
 # =============================================================================
