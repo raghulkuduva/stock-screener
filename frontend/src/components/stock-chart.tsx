@@ -43,6 +43,7 @@ interface ChartResponse {
 interface StockChartProps {
   ticker: string;
   className?: string;
+  market?: string;
 }
 
 // =============================================================================
@@ -70,9 +71,10 @@ interface CustomTooltipProps {
     payload: ChartDataPoint;
   }>;
   label?: string;
+  currencySymbol?: string;
 }
 
-function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, label, currencySymbol = "₹" }: CustomTooltipProps) {
   if (!active || !payload || !payload.length) return null;
 
   const data = payload[0].payload;
@@ -85,19 +87,19 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <div className="space-y-1">
         <div className="flex justify-between gap-4 text-sm">
           <span className="text-muted-foreground">Open</span>
-          <span className="mono font-medium">₹{data.open.toLocaleString()}</span>
+          <span className="mono font-medium">{currencySymbol}{data.open.toLocaleString()}</span>
         </div>
         <div className="flex justify-between gap-4 text-sm">
           <span className="text-muted-foreground">High</span>
-          <span className="mono font-medium text-emerald-400">₹{data.high.toLocaleString()}</span>
+          <span className="mono font-medium text-emerald-400">{currencySymbol}{data.high.toLocaleString()}</span>
         </div>
         <div className="flex justify-between gap-4 text-sm">
           <span className="text-muted-foreground">Low</span>
-          <span className="mono font-medium text-red-400">₹{data.low.toLocaleString()}</span>
+          <span className="mono font-medium text-red-400">{currencySymbol}{data.low.toLocaleString()}</span>
         </div>
         <div className="flex justify-between gap-4 text-sm">
           <span className="text-muted-foreground">Close</span>
-          <span className="mono font-medium text-primary">₹{data.close.toLocaleString()}</span>
+          <span className="mono font-medium text-primary">{currencySymbol}{data.close.toLocaleString()}</span>
         </div>
       </div>
     </div>
@@ -108,7 +110,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 // Stock Chart Component
 // =============================================================================
 
-export function StockChart({ ticker, className = "" }: StockChartProps) {
+export function StockChart({ ticker, className = "", market = "india" }: StockChartProps) {
+  const currencySymbol = market === "us" ? "$" : "₹";
   const [period, setPeriod] = useState<string>("6M");
   const [chartData, setChartData] = useState<ChartResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -152,9 +155,9 @@ export function StockChart({ ticker, className = "" }: StockChartProps) {
   // Format Y-axis
   const formatYAxis = (value: number) => {
     if (value >= 1000) {
-      return `₹${(value / 1000).toFixed(1)}K`;
+      return `${currencySymbol}${(value / 1000).toFixed(1)}K`;
     }
-    return `₹${value}`;
+    return `${currencySymbol}${value}`;
   };
 
   // Format X-axis
@@ -268,7 +271,7 @@ export function StockChart({ ticker, className = "" }: StockChartProps) {
                   domain={["auto", "auto"]}
                   width={55}
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip currencySymbol={currencySymbol} />} />
                 <Area
                   type="monotone"
                   dataKey="close"
@@ -292,7 +295,7 @@ export function StockChart({ ticker, className = "" }: StockChartProps) {
             <div>
               <p className="text-xs text-muted-foreground">Current</p>
               <p className="font-semibold mono">
-                ₹{chartData.current_price?.toLocaleString()}
+                {currencySymbol}{chartData.current_price?.toLocaleString()}
               </p>
             </div>
             <div>
@@ -303,20 +306,20 @@ export function StockChart({ ticker, className = "" }: StockChartProps) {
                 }`}
               >
                 {chartData.price_change
-                  ? `${chartData.price_change >= 0 ? "+" : ""}₹${Math.abs(chartData.price_change).toLocaleString()}`
+                  ? `${chartData.price_change >= 0 ? "+" : ""}${currencySymbol}${Math.abs(chartData.price_change).toLocaleString()}`
                   : "—"}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">High ({period})</p>
               <p className="font-semibold mono text-emerald-400">
-                ₹{Math.max(...chartData.data.map((d) => d.high)).toLocaleString()}
+                {currencySymbol}{Math.max(...chartData.data.map((d) => d.high)).toLocaleString()}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Low ({period})</p>
               <p className="font-semibold mono text-red-400">
-                ₹{Math.min(...chartData.data.map((d) => d.low)).toLocaleString()}
+                {currencySymbol}{Math.min(...chartData.data.map((d) => d.low)).toLocaleString()}
               </p>
             </div>
           </div>

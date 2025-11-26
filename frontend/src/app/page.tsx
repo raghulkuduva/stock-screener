@@ -117,19 +117,26 @@ interface Index {
 // Constants
 // =============================================================================
 
-const INDICES: Index[] = [
-  { key: "nifty_50", name: "Nifty 50", description: "Top 50 companies", stock_count: 50 },
-  { key: "nifty_next_50", name: "Nifty Next 50", description: "Next 50 companies", stock_count: 50 },
-  { key: "nifty_100", name: "Nifty 100", description: "Top 100 companies", stock_count: 100 },
-  { key: "nifty_it", name: "Nifty IT", description: "Technology sector", stock_count: 10 },
-  { key: "nifty_bank", name: "Nifty Bank", description: "Banking sector", stock_count: 12 },
-  { key: "nifty_pharma", name: "Nifty Pharma", description: "Pharmaceutical", stock_count: 15 },
-  { key: "nifty_auto", name: "Nifty Auto", description: "Automobile sector", stock_count: 15 },
-  { key: "nifty_fmcg", name: "Nifty FMCG", description: "Consumer goods", stock_count: 15 },
-  { key: "nifty_metal", name: "Nifty Metal", description: "Metal & Mining", stock_count: 15 },
-  { key: "nifty_psu_bank", name: "Nifty PSU Bank", description: "Public banks", stock_count: 12 },
-  { key: "nifty_energy", name: "Nifty Energy", description: "Energy sector", stock_count: 10 },
-  { key: "nifty_midcap_50", name: "Nifty Midcap 50", description: "Top 50 midcap", stock_count: 50 },
+const INDICES: (Index & { market: string })[] = [
+  // Indian Markets 🇮🇳
+  { key: "nifty_50", name: "🇮🇳 Nifty 50", description: "Top 50 Indian companies", stock_count: 50, market: "india" },
+  { key: "nifty_next_50", name: "🇮🇳 Nifty Next 50", description: "Next 50 Indian companies", stock_count: 50, market: "india" },
+  { key: "nifty_100", name: "🇮🇳 Nifty 100", description: "Top 100 Indian companies", stock_count: 100, market: "india" },
+  { key: "nifty_it", name: "🇮🇳 Nifty IT", description: "Indian Tech sector", stock_count: 10, market: "india" },
+  { key: "nifty_bank", name: "🇮🇳 Nifty Bank", description: "Indian Banking", stock_count: 12, market: "india" },
+  { key: "nifty_pharma", name: "🇮🇳 Nifty Pharma", description: "Indian Pharma", stock_count: 15, market: "india" },
+  { key: "nifty_auto", name: "🇮🇳 Nifty Auto", description: "Indian Auto", stock_count: 15, market: "india" },
+  { key: "nifty_fmcg", name: "🇮🇳 Nifty FMCG", description: "Indian Consumer", stock_count: 15, market: "india" },
+  { key: "nifty_metal", name: "🇮🇳 Nifty Metal", description: "Indian Metal", stock_count: 15, market: "india" },
+  { key: "nifty_energy", name: "🇮🇳 Nifty Energy", description: "Indian Energy", stock_count: 10, market: "india" },
+  // US Markets 🇺🇸
+  { key: "sp500_top50", name: "🇺🇸 S&P 500 Top 50", description: "Top 50 S&P stocks", stock_count: 50, market: "us" },
+  { key: "nasdaq_100", name: "🇺🇸 NASDAQ 100", description: "Top NASDAQ stocks", stock_count: 100, market: "us" },
+  { key: "dow_jones_30", name: "🇺🇸 Dow Jones 30", description: "30 Dow stocks", stock_count: 30, market: "us" },
+  { key: "magnificent_7", name: "🇺🇸 Magnificent 7", description: "Top 7 Tech Giants", stock_count: 7, market: "us" },
+  { key: "us_tech", name: "🇺🇸 US Tech", description: "US Tech leaders", stock_count: 30, market: "us" },
+  { key: "us_financials", name: "🇺🇸 US Financials", description: "US Banks & Finance", stock_count: 20, market: "us" },
+  { key: "us_healthcare", name: "🇺🇸 US Healthcare", description: "US Healthcare", stock_count: 20, market: "us" },
 ];
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -138,8 +145,11 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 // Helper Functions
 // =============================================================================
 
-function formatCurrency(value: number | null | undefined): string {
+function formatCurrency(value: number | null | undefined, market: string = "india"): string {
   if (value == null) return "—";
+  if (market === "us") {
+    return `$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  }
   return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
@@ -190,12 +200,13 @@ function MetricCard({
   );
 }
 
-function StockCard({ stock, rank }: { stock: Stock; rank: number }) {
+function StockCard({ stock, rank, market = "india" }: { stock: Stock; rank: number; market?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const high52w = get52wHigh(stock);
   const pctFromHigh = high52w && stock.current_price 
     ? ((stock.current_price / high52w) - 1) * 100 
     : null;
+  const currencySymbol = market === "us" ? "$" : "₹";
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -213,7 +224,7 @@ function StockCard({ stock, rank }: { stock: Stock; rank: number }) {
                     {stock.ticker.replace(".NS", "")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {formatCurrency(stock.current_price)}
+                    {formatCurrency(stock.current_price, market)}
                   </p>
                 </div>
               </div>
@@ -283,22 +294,22 @@ function StockCard({ stock, rank }: { stock: Stock; rank: number }) {
             
             {/* Price Chart - Always visible when expanded */}
             <div className="mb-6">
-              <StockChart ticker={stock.ticker} />
+              <StockChart ticker={stock.ticker} market={market} />
             </div>
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">EMA 100</p>
-                <p className="font-semibold mono">{formatCurrency(stock.ema100)}</p>
+                <p className="font-semibold mono">{formatCurrency(stock.ema100, market)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">EMA 200</p>
-                <p className="font-semibold mono">{formatCurrency(stock.ema200)}</p>
+                <p className="font-semibold mono">{formatCurrency(stock.ema200, market)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">52W High</p>
-                <p className="font-semibold mono">{formatCurrency(high52w)}</p>
+                <p className="font-semibold mono">{formatCurrency(high52w, market)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Up Days %</p>
@@ -433,6 +444,7 @@ export default function Home() {
   };
 
   const selectedIndexInfo = INDICES.find((i) => i.key === selectedIndex);
+  const currentMarket = selectedIndexInfo?.market || "india";
 
   return (
     <TooltipProvider>
@@ -675,7 +687,7 @@ export default function Home() {
                   {results.top_stocks.length > 0 ? (
                     <div className="space-y-3">
                       {results.top_stocks.map((stock, idx) => (
-                        <StockCard key={stock.ticker} stock={stock} rank={idx + 1} />
+                        <StockCard key={stock.ticker} stock={stock} rank={idx + 1} market={currentMarket} />
                       ))}
                     </div>
                   ) : (

@@ -209,7 +209,89 @@ def get_ticker_list(index_name: str) -> List[str]:
         "JUBLINGREA", "KAJARIACER", "KALYANKJIL", "KEI", "KEC"
     ]))
     
-    # Index mapping
+    # =========================================================================
+    # US MARKET INDICES
+    # =========================================================================
+    
+    # S&P 500 Top 50 (by market cap)
+    SP500_TOP50 = [
+        "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA",
+        "META", "TSLA", "BRK-B", "UNH", "JNJ",
+        "V", "XOM", "JPM", "PG", "MA",
+        "HD", "CVX", "MRK", "ABBV", "LLY",
+        "PEP", "COST", "KO", "AVGO", "WMT",
+        "MCD", "CSCO", "TMO", "ACN", "ABT",
+        "DHR", "VZ", "ADBE", "CRM", "NKE",
+        "CMCSA", "NEE", "TXN", "PM", "UPS",
+        "RTX", "INTC", "ORCL", "AMD", "HON",
+        "IBM", "QCOM", "LOW", "SPGI", "CAT"
+    ]
+    
+    # NASDAQ 100 Top Stocks
+    NASDAQ_100 = [
+        "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN",
+        "NVDA", "META", "TSLA", "AVGO", "COST",
+        "ASML", "PEP", "CSCO", "AZN", "ADBE",
+        "NFLX", "AMD", "TMUS", "TXN", "CMCSA",
+        "INTC", "QCOM", "HON", "AMGN", "INTU",
+        "AMAT", "ISRG", "BKNG", "SBUX", "VRTX",
+        "MDLZ", "GILD", "ADI", "ADP", "LRCX",
+        "REGN", "MU", "PANW", "PYPL", "SNPS",
+        "KLAC", "CDNS", "MELI", "CSX", "ORLY",
+        "MAR", "MRVL", "NXPI", "MNST", "FTNT",
+        "CTAS", "PCAR", "WDAY", "ADSK", "CHTR",
+        "DXCM", "KDP", "AEP", "MRNA", "KHC",
+        "PAYX", "CPRT", "MCHP", "ODFL", "EXC",
+        "ROST", "LULU", "IDXX", "FAST", "GEHC",
+        "EA", "VRSK", "CTSH", "BKR", "CSGP",
+        "FANG", "XEL", "ON", "DDOG", "ANSS",
+        "ZS", "CDW", "GFS", "TTWO", "ILMN",
+        "WBD", "BIIB", "DLTR", "WBA", "ALGN",
+        "ENPH", "SIRI", "JD", "LCID", "ZM"
+    ]
+    
+    # Dow Jones 30
+    DOW_JONES_30 = [
+        "AAPL", "AMGN", "AXP", "BA", "CAT",
+        "CRM", "CSCO", "CVX", "DIS", "DOW",
+        "GS", "HD", "HON", "IBM", "INTC",
+        "JNJ", "JPM", "KO", "MCD", "MMM",
+        "MRK", "MSFT", "NKE", "PG", "TRV",
+        "UNH", "V", "VZ", "WBA", "WMT"
+    ]
+    
+    # Magnificent 7 - Top Tech Giants
+    MAGNIFICENT_7 = [
+        "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA"
+    ]
+    
+    # US Tech Leaders (Extended)
+    US_TECH = [
+        "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA",
+        "META", "TSLA", "AVGO", "ADBE", "CRM",
+        "AMD", "INTC", "QCOM", "TXN", "AMAT",
+        "LRCX", "MU", "SNPS", "CDNS", "KLAC",
+        "NFLX", "PYPL", "NOW", "PANW", "INTU",
+        "ORCL", "IBM", "CSCO", "DELL", "HPQ"
+    ]
+    
+    # US Financials
+    US_FINANCIALS = [
+        "JPM", "BAC", "WFC", "GS", "MS",
+        "C", "BLK", "SCHW", "AXP", "SPGI",
+        "CB", "PNC", "USB", "TFC", "COF",
+        "BK", "AIG", "MET", "PRU", "ALL"
+    ]
+    
+    # US Healthcare
+    US_HEALTHCARE = [
+        "UNH", "JNJ", "LLY", "PFE", "ABBV",
+        "MRK", "TMO", "ABT", "DHR", "BMY",
+        "AMGN", "GILD", "VRTX", "REGN", "ISRG",
+        "MDT", "SYK", "ZTS", "BDX", "CI"
+    ]
+    
+    # Index mapping - Indian Markets
     INDEX_MAP = {
         "nifty_50": NIFTY_50,
         "nifty_next_50": NIFTY_NEXT_50,
@@ -228,17 +310,38 @@ def get_ticker_list(index_name: str) -> List[str]:
         "nifty_midcap_100": NIFTY_MIDCAP_100,
     }
     
+    # Index mapping - US Markets
+    US_INDEX_MAP = {
+        "sp500_top50": SP500_TOP50,
+        "nasdaq_100": NASDAQ_100,
+        "dow_jones_30": DOW_JONES_30,
+        "magnificent_7": MAGNIFICENT_7,
+        "us_tech": US_TECH,
+        "us_financials": US_FINANCIALS,
+        "us_healthcare": US_HEALTHCARE,
+    }
+    
     index_lower = index_name.lower().strip()
     
-    if index_lower not in INDEX_MAP:
-        available = ", ".join(sorted(INDEX_MAP.keys()))
-        raise ValueError(
-            f"Unknown index: '{index_name}'. Available indices: {available}"
-        )
+    # Check Indian indices first
+    if index_lower in INDEX_MAP:
+        # Add .NS suffix for NSE tickers
+        tickers = [f"{ticker}.NS" for ticker in INDEX_MAP[index_lower]]
+        logger.info(f"Loaded {len(tickers)} tickers for Indian index '{index_name}'")
+        return tickers
     
-    # Add .NS suffix for NSE tickers
-    tickers = [f"{ticker}.NS" for ticker in INDEX_MAP[index_lower]]
-    logger.info(f"Loaded {len(tickers)} tickers for index '{index_name}'")
+    # Check US indices
+    if index_lower in US_INDEX_MAP:
+        # US tickers don't need suffix
+        tickers = US_INDEX_MAP[index_lower]
+        logger.info(f"Loaded {len(tickers)} tickers for US index '{index_name}'")
+        return tickers
+    
+    # Index not found
+    all_indices = sorted(list(INDEX_MAP.keys()) + list(US_INDEX_MAP.keys()))
+    raise ValueError(
+        f"Unknown index: '{index_name}'. Available indices: {', '.join(all_indices)}"
+    )
     
     return tickers
 

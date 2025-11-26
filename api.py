@@ -131,21 +131,30 @@ PERIOD_MAP = {
 # =============================================================================
 
 INDICES = {
-    "nifty_50": {"name": "Nifty 50", "description": "Top 50 companies by market cap"},
-    "nifty_next_50": {"name": "Nifty Next 50", "description": "Next 50 companies after Nifty 50"},
-    "nifty_100": {"name": "Nifty 100", "description": "Top 100 companies"},
-    "nifty_it": {"name": "Nifty IT", "description": "Information Technology sector"},
-    "nifty_bank": {"name": "Nifty Bank", "description": "Banking sector"},
-    "nifty_pharma": {"name": "Nifty Pharma", "description": "Pharmaceutical sector"},
-    "nifty_auto": {"name": "Nifty Auto", "description": "Automobile sector"},
-    "nifty_fmcg": {"name": "Nifty FMCG", "description": "Fast Moving Consumer Goods"},
-    "nifty_metal": {"name": "Nifty Metal", "description": "Metal & Mining sector"},
-    "nifty_psu_bank": {"name": "Nifty PSU Bank", "description": "Public Sector Banks"},
-    "nifty_realty": {"name": "Nifty Realty", "description": "Real Estate sector"},
-    "nifty_energy": {"name": "Nifty Energy", "description": "Energy sector"},
-    "nifty_infra": {"name": "Nifty Infra", "description": "Infrastructure sector"},
-    "nifty_midcap_50": {"name": "Nifty Midcap 50", "description": "Top 50 midcap companies"},
-    "nifty_midcap_100": {"name": "Nifty Midcap 100", "description": "Top 100 midcap companies"},
+    # Indian Markets
+    "nifty_50": {"name": "Nifty 50", "description": "Top 50 Indian companies", "market": "india"},
+    "nifty_next_50": {"name": "Nifty Next 50", "description": "Next 50 Indian companies", "market": "india"},
+    "nifty_100": {"name": "Nifty 100", "description": "Top 100 Indian companies", "market": "india"},
+    "nifty_it": {"name": "Nifty IT", "description": "Indian IT sector", "market": "india"},
+    "nifty_bank": {"name": "Nifty Bank", "description": "Indian Banking sector", "market": "india"},
+    "nifty_pharma": {"name": "Nifty Pharma", "description": "Indian Pharma sector", "market": "india"},
+    "nifty_auto": {"name": "Nifty Auto", "description": "Indian Auto sector", "market": "india"},
+    "nifty_fmcg": {"name": "Nifty FMCG", "description": "Indian Consumer Goods", "market": "india"},
+    "nifty_metal": {"name": "Nifty Metal", "description": "Indian Metal & Mining", "market": "india"},
+    "nifty_psu_bank": {"name": "Nifty PSU Bank", "description": "Indian Public Banks", "market": "india"},
+    "nifty_realty": {"name": "Nifty Realty", "description": "Indian Real Estate", "market": "india"},
+    "nifty_energy": {"name": "Nifty Energy", "description": "Indian Energy sector", "market": "india"},
+    "nifty_infra": {"name": "Nifty Infra", "description": "Indian Infrastructure", "market": "india"},
+    "nifty_midcap_50": {"name": "Nifty Midcap 50", "description": "Indian Midcap stocks", "market": "india"},
+    "nifty_midcap_100": {"name": "Nifty Midcap 100", "description": "Indian Midcap 100", "market": "india"},
+    # US Markets
+    "sp500_top50": {"name": "S&P 500 Top 50", "description": "Top 50 S&P 500 stocks", "market": "us"},
+    "nasdaq_100": {"name": "NASDAQ 100", "description": "Top 100 NASDAQ stocks", "market": "us"},
+    "dow_jones_30": {"name": "Dow Jones 30", "description": "30 Dow Jones stocks", "market": "us"},
+    "magnificent_7": {"name": "Magnificent 7", "description": "Top 7 Tech Giants", "market": "us"},
+    "us_tech": {"name": "US Tech", "description": "US Technology leaders", "market": "us"},
+    "us_financials": {"name": "US Financials", "description": "US Financial sector", "market": "us"},
+    "us_healthcare": {"name": "US Healthcare", "description": "US Healthcare sector", "market": "us"},
 }
 
 
@@ -216,13 +225,21 @@ def fetch_chart_data_sync(ticker: str, period: str) -> dict:
     """Fetch chart data for a ticker synchronously."""
     yf_period = PERIOD_MAP.get(period, "6mo")
     
-    # Ensure ticker has .NS suffix
-    if not ticker.endswith(".NS"):
-        ticker = f"{ticker}.NS"
+    # Don't modify ticker if it already has a suffix or is a US stock
+    # US stocks don't need suffix, Indian stocks need .NS
+    # If ticker doesn't have a dot, assume it could be US or Indian
+    # Try without suffix first (US), then with .NS (Indian)
+    original_ticker = ticker
     
-    # Fetch data
+    # Fetch data - try as-is first
     stock = yf.Ticker(ticker)
     df = stock.history(period=yf_period, interval="1d")
+    
+    # If no data and ticker doesn't have suffix, try with .NS (Indian)
+    if df.empty and "." not in ticker:
+        ticker = f"{ticker}.NS"
+        stock = yf.Ticker(ticker)
+        df = stock.history(period=yf_period, interval="1d")
     
     if df.empty:
         raise ValueError(f"No data found for ticker {ticker}")
