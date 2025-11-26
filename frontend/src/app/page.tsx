@@ -19,7 +19,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -207,7 +206,6 @@ function StockCard({ stock, rank, market = "india" }: { stock: Stock; rank: numb
   const pctFromHigh = high52w && stock.current_price 
     ? ((stock.current_price / high52w) - 1) * 100 
     : null;
-  const currencySymbol = market === "us" ? "$" : "₹";
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -343,28 +341,6 @@ function StockCard({ stock, rank, market = "india" }: { stock: Stock; rank: numb
         </CollapsibleContent>
       </Card>
     </Collapsible>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-4">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Card key={i} className="glass-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-10 w-10 rounded-xl" />
-              <div className="space-y-2">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-4 w-16" />
-              </div>
-              <div className="flex-1" />
-              <Skeleton className="h-8 w-20" />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
   );
 }
 

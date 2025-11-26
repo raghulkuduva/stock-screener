@@ -74,7 +74,7 @@ interface CustomTooltipProps {
   currencySymbol?: string;
 }
 
-function CustomTooltip({ active, payload, label, currencySymbol = "₹" }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, currencySymbol = "₹" }: CustomTooltipProps) {
   if (!active || !payload || !payload.length) return null;
 
   const data = payload[0].payload;
