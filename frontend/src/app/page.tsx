@@ -292,10 +292,12 @@ function StockCard({ stock, rank, market = "india" }: { stock: Stock; rank: numb
           <div className="px-6 pb-6">
             <Separator className="mb-4" />
             
-            {/* Price Chart - Always visible when expanded */}
-            <div className="mb-6">
-              <StockChart ticker={stock.ticker} market={market} />
-            </div>
+            {/* Price Chart - Only render when expanded to fix ResponsiveContainer sizing */}
+            {isOpen && (
+              <div className="mb-6">
+                <StockChart ticker={stock.ticker} market={market} />
+              </div>
+            )}
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
