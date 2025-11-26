@@ -62,6 +62,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { StockChart } from "@/components/stock-chart";
+import { PortfolioSimulator } from "@/components/portfolio-simulator";
 
 // =============================================================================
 // Types
@@ -664,26 +665,31 @@ export default function Home() {
 
                 {/* Top Stocks Tab */}
                 <TabsContent value="top" className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
                       <h3 className="text-xl font-semibold">Top {results.top_stocks.length} Momentum Stocks</h3>
                       <p className="text-sm text-muted-foreground">
                         Ranked by combined 6M and 12M returns
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        downloadCSV(
-                          results.top_stocks,
-                          `momentum_top_${selectedIndex}_${new Date().toISOString().split("T")[0]}.csv`
-                        )
-                      }
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Export CSV
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {results.top_stocks.length > 0 && (
+                        <PortfolioSimulator stocks={results.top_stocks} market={currentMarket} />
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          downloadCSV(
+                            results.top_stocks,
+                            `momentum_top_${selectedIndex}_${new Date().toISOString().split("T")[0]}.csv`
+                          )
+                        }
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export CSV
+                      </Button>
+                    </div>
                   </div>
 
                   {results.top_stocks.length > 0 ? (

@@ -491,6 +491,186 @@ async def get_batch_chart_data(
 
 
 # =============================================================================
+# Portfolio Simulation
+# =============================================================================
+
+class SimulationRequest(BaseModel):
+    tickers: List[str] = Field(..., description="List of ticker symbols")
+    investment_amount: float = Field(..., gt=0, description="Total investment amount")
+    period_months: int = Field(..., ge=1, le=6, description="Simulation period in months (1-6)")
+
+
+class StockPerformance(BaseModel):
+    ticker: str
+    invested_amount: float
+    shares_bought: float
+    buy_price: float
+    current_price: float
+    current_value: float
+    profit_loss: float
+    return_pct: float
+
+
+class SimulationResponse(BaseModel):
+    success: bool
+    investment_amount: float
+    period_months: int
+    period_label: str
+    start_date: str
+    end_date: str
+    total_invested: float
+    current_value: float
+    total_profit_loss: float
+    total_return_pct: float
+    stocks: List[StockPerformance]
+    portfolio_timeline: List[Dict[str, Any]]
+
+
+def simulate_portfolio_sync(tickers: List[str], investment_amount: float, period_months: int) -> dict:
+    """Simulate portfolio performance over a given period."""
+    import pandas as pd
+    from datetime import datetime, timedelta
+    
+    # Calculate period
+    period_map = {1: "1mo", 2: "2mo", 3: "3mo", 4: "4mo", 5: "5mo", 6: "6mo"}
+    yf_period = period_map.get(period_months, "3mo")
+    
+    # Per-stock investment
+    per_stock_amount = investment_amount / len(tickers)
+    
+    stocks_performance = []
+    all_price_data = {}
+    failed_tickers = []
+    
+    # Fetch data for each ticker
+    for ticker in tickers:
+        try:
+            # Handle both US and Indian tickers
+            clean_ticker = ticker.replace(".NS", "") if ".NS" in ticker else ticker
+            
+            # Try fetching - first as-is, then with .NS
+            stock = yf.Ticker(ticker if ".NS" in ticker else clean_ticker)
+            df = stock.history(period=yf_period, interval="1d")
+            
+            if df.empty and ".NS" not in ticker:
+                stock = yf.Ticker(f"{clean_ticker}.NS")
+                df = stock.history(period=yf_period, interval="1d")
+                if not df.empty:
+                    ticker = f"{clean_ticker}.NS"
+            
+            if df.empty:
+                failed_tickers.append(ticker)
+                continue
+            
+            # Get buy price (first day) and current price (last day)
+            buy_price = df['Close'].iloc[0]
+            current_price = df['Close'].iloc[-1]
+            
+            # Calculate shares and performance
+            shares_bought = per_stock_amount / buy_price
+            current_value = shares_bought * current_price
+            profit_loss = current_value - per_stock_amount
+            return_pct = (profit_loss / per_stock_amount) * 100
+            
+            stocks_performance.append({
+                "ticker": ticker.replace(".NS", ""),
+                "invested_amount": round(per_stock_amount, 2),
+                "shares_bought": round(shares_bought, 4),
+                "buy_price": round(buy_price, 2),
+                "current_price": round(current_price, 2),
+                "current_value": round(current_value, 2),
+                "profit_loss": round(profit_loss, 2),
+                "return_pct": round(return_pct, 2),
+            })
+            
+            # Store price data for timeline
+            all_price_data[ticker] = df['Close']
+            
+        except Exception as e:
+            failed_tickers.append(ticker)
+            continue
+    
+    if not stocks_performance:
+        raise ValueError("Could not fetch data for any ticker")
+    
+    # Calculate portfolio timeline
+    portfolio_timeline = []
+    
+    if all_price_data:
+        # Combine all price data
+        combined_df = pd.DataFrame(all_price_data)
+        combined_df = combined_df.dropna()
+        
+        if len(combined_df) > 0:
+            # Calculate daily portfolio value
+            first_prices = combined_df.iloc[0]
+            shares_per_stock = {col: per_stock_amount / first_prices[col] for col in combined_df.columns}
+            
+            for idx, row in combined_df.iterrows():
+                daily_value = sum(shares_per_stock[col] * row[col] for col in combined_df.columns)
+                portfolio_timeline.append({
+                    "date": idx.strftime("%Y-%m-%d"),
+                    "value": round(daily_value, 2),
+                })
+    
+    # Calculate totals
+    total_invested = sum(s["invested_amount"] for s in stocks_performance)
+    current_value = sum(s["current_value"] for s in stocks_performance)
+    total_profit_loss = current_value - total_invested
+    total_return_pct = (total_profit_loss / total_invested) * 100 if total_invested > 0 else 0
+    
+    # Get date range
+    start_date = portfolio_timeline[0]["date"] if portfolio_timeline else "N/A"
+    end_date = portfolio_timeline[-1]["date"] if portfolio_timeline else "N/A"
+    
+    return {
+        "investment_amount": investment_amount,
+        "period_months": period_months,
+        "period_label": f"{period_months} Month{'s' if period_months > 1 else ''}",
+        "start_date": start_date,
+        "end_date": end_date,
+        "total_invested": round(total_invested, 2),
+        "current_value": round(current_value, 2),
+        "total_profit_loss": round(total_profit_loss, 2),
+        "total_return_pct": round(total_return_pct, 2),
+        "stocks": stocks_performance,
+        "portfolio_timeline": portfolio_timeline,
+    }
+
+
+@app.post("/simulate", response_model=SimulationResponse)
+async def simulate_portfolio(request: SimulationRequest):
+    """
+    Simulate portfolio performance with equal-weight investment.
+    
+    Takes a list of tickers, investment amount, and time period (1-6 months).
+    Returns individual stock performance and total portfolio performance.
+    """
+    if not request.tickers:
+        raise HTTPException(status_code=400, detail="No tickers provided")
+    
+    if len(request.tickers) > 50:
+        raise HTTPException(status_code=400, detail="Maximum 50 tickers allowed")
+    
+    try:
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            executor,
+            simulate_portfolio_sync,
+            request.tickers,
+            request.investment_amount,
+            request.period_months,
+        )
+        
+        return SimulationResponse(success=True, **result)
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Simulation error: {str(e)}")
+
+
+# =============================================================================
 # Run with: uvicorn api:app --reload --port 8000
 # =============================================================================
 
