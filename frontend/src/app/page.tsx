@@ -89,6 +89,7 @@ interface Stock {
   gate_C_consistency: boolean | null;
   gate_D_performance: boolean | null;
   rejection_reasons: string | null;
+  [key: string]: unknown;
 }
 
 interface ScreenerResponse {
