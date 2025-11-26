@@ -62,6 +62,7 @@ import {
 } from "lucide-react";
 import { StockChart } from "@/components/stock-chart";
 import { PortfolioSimulator } from "@/components/portfolio-simulator";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 // =============================================================================
 // Types
@@ -216,7 +217,7 @@ function StockCard({ stock, rank, market = "india" }: { stock: Stock; rank: numb
             <div className="flex items-center justify-between">
               {/* Left: Rank & Ticker */}
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-400 text-zinc-900 font-bold mono text-sm">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-300 to-zinc-500 dark:from-zinc-200 dark:to-zinc-400 text-zinc-900 font-bold mono text-sm">
                   #{rank}
                 </div>
                 <div>
@@ -434,38 +435,41 @@ export default function Home() {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-zinc-200 to-zinc-400">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-zinc-300 to-zinc-500 dark:from-zinc-200 dark:to-zinc-400">
                   <Activity className="h-6 w-6 text-zinc-900" />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold gradient-text">Momentum Screener</h1>
-                  <p className="text-xs text-muted-foreground">Indian Stock Analysis</p>
+                  <p className="text-xs text-muted-foreground">Indian & US Stocks</p>
                 </div>
               </div>
-              <Badge variant="outline" className="hidden sm:flex gap-1 border-primary/50">
-                <Zap className="h-3 w-3 text-primary" />
-                Live Data
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="hidden sm:flex gap-1 border-primary/50">
+                  <Zap className="h-3 w-3 text-primary" />
+                  Live Data
+                </Badge>
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </header>
 
         <main className="container mx-auto px-4 py-8">
           {/* Hero Section */}
-          <div className="text-center mb-12 animate-slide-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <div className="text-center mb-8 sm:mb-12 animate-slide-in px-2">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
               Find <span className="gradient-text">Momentum</span> Stocks
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Screen Indian stocks using technical analysis. Identify high-momentum opportunities
-              with our 4-gate filtering system.
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+              Screen Indian & US stocks using technical analysis. Identify high-momentum 
+              opportunities with our 4-gate filtering system.
             </p>
           </div>
 
           {/* Controls */}
-          <Card className="glass-card mb-8 animate-slide-in-delay-1">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="glass-card mb-6 sm:mb-8 animate-slide-in-delay-1 mx-2 sm:mx-0">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {/* Index Selection */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Select Index</Label>

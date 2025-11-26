@@ -5,8 +5,42 @@
 @tailwind utilities;
 
 @layer base {
+  /* Light Theme (default) */
   :root {
-    /* Zinc Dark Theme */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.75rem;
+
+    /* Custom variables */
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
+  }
+
+  /* Dark Theme */
+  .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -26,12 +60,6 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --radius: 0.75rem;
 
     /* Custom variables */
     --success: 142 76% 36%;
@@ -73,7 +101,7 @@
 
 @layer components {
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-zinc-200 to-zinc-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-zinc-600 to-zinc-800 dark:from-zinc-200 dark:to-zinc-400;
   }
 
   .gradient-border {
@@ -95,7 +123,7 @@
   }
 
   .glass-card {
-    @apply bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/50;
+    @apply bg-white/80 dark:bg-zinc-900/50 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800/50;
   }
 
   .glow {
@@ -129,17 +157,21 @@
   }
 
   .stock-card:hover {
-    @apply -translate-y-1 border-zinc-700;
+    @apply -translate-y-1 border-zinc-300 dark:border-zinc-700;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+  }
+
+  .dark .stock-card:hover {
     box-shadow: 0 10px 40px -10px rgba(255, 255, 255, 0.1);
   }
 
   /* Return colors */
   .return-positive {
-    @apply text-emerald-400;
+    @apply text-emerald-600 dark:text-emerald-400;
   }
 
   .return-negative {
-    @apply text-red-400;
+    @apply text-red-600 dark:text-red-400;
   }
 
   /* Grid pattern background */
@@ -164,11 +196,26 @@
     pointer-events: none;
   }
 
-  /* Radial gradient background - zinc themed */
+  /* Radial gradient background */
   .radial-gradient-bg {
-    background: radial-gradient(ellipse at top, rgba(161, 161, 170, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at bottom right, rgba(113, 113, 122, 0.05) 0%, transparent 50%),
-                hsl(var(--background));
+    @apply bg-gradient-to-br from-zinc-50 via-white to-zinc-100 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950;
+  }
+
+  /* Mobile-friendly utilities */
+  .safe-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .mobile-stack {
+    @apply flex flex-col sm:flex-row;
+  }
+
+  .mobile-hide {
+    @apply hidden sm:block;
+  }
+
+  .mobile-show {
+    @apply block sm:hidden;
   }
 }
 
@@ -201,4 +248,15 @@
 .animate-slide-in-delay-3 {
   animation: slideIn 0.4s ease-out 0.3s forwards;
   opacity: 0;
+}
+
+/* Mobile responsive fixes */
+@media (max-width: 640px) {
+  .stock-card {
+    @apply rounded-lg;
+  }
+  
+  .glass-card {
+    @apply rounded-xl;
+  }
 }
